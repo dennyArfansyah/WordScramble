@@ -24,6 +24,8 @@ struct ContentView: View {
                         .autocapitalization(.none)
                 }
                 
+                Text(score())
+                
                 Section {
                     ForEach(usedWords, id: \.self) { word in
                         HStack {
@@ -42,16 +44,29 @@ struct ContentView: View {
             } message: {
                 Text(errorMessage)
             }
+            .toolbar {
+                Button("Start Game") {
+                    startGame()
+                }
+            }
         }
+    }
+    
+    private func score() -> String {
+        "Your have \(usedWords.count) right " + (usedWords.count < 2 ? "word" : "words")
     }
     
     private func addNewWord() {
         let answer = newWord.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
-        guard answer.count > 0 else { return }
+        guard answer.count > 2 else {
+            wordError(errorTitle: "Word must longer", errorMessage: "Type more than 2 letter")
+            return
+        }
         
         guard isOriginal(word: answer) else {
             wordError(errorTitle: "Word used already", errorMessage: "Be more original!")
             return
+            
         }
         
         guard isPossible(word: answer) else {
@@ -71,6 +86,8 @@ struct ContentView: View {
     }
     
     private func startGame() {
+        newWord = ""
+        usedWords.removeAll()
         if let fileURL = Bundle.main.url(forResource: "start", withExtension: "txt") {
             if let fileContents = try? String(contentsOf: fileURL) {
                 let allWords = fileContents.components(separatedBy: "\n")
@@ -88,7 +105,6 @@ struct ContentView: View {
     
     private func isPossible(word: String) -> Bool {
         var tempWord = rooWord
-        
         for letter in word {
             if let pos = tempWord.firstIndex(of: letter) {
                 tempWord.remove(at: pos)
